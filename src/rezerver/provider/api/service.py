@@ -27,7 +27,9 @@ ReadOneServiceResponse = service.ReadServiceById.model2schema(
 
 
 @router.post(
-    "", response_model=service.create.CreateServiceResponse, tags=["Service Access"]
+    "",
+    response_model=service.create.CreateServiceResponse,
+    tags=["Service Access"],
 )
 class CreateService(service.CreateService):
     repo = models.Service

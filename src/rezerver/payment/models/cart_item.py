@@ -18,7 +18,7 @@ class CartItem(Model):
         "cart_items",
         on_delete=fields.CASCADE,
     )
-    shop_id = fields.ForeignKeyField("provider.Shop", "carts")
+    shop = fields.ForeignKeyField("provider.Shop", "carts")
     service_name = NAME_FIELD
     service_price_min = PRICE_MIN_FIELD
     service_price_max = PRICE_MAX_FIELD

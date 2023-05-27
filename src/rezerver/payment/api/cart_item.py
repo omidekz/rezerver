@@ -1,9 +1,12 @@
-from libs import APIRouter, service
-from .. import models
+import typing as t
 from fastapi import Depends, Path
+from libs import APIRouter, service
 from . import middlewares
+from .. import models
 
-router = APIRouter(prefix="/{cart_id}/item", tags=["CartItem"])
+user_router = APIRouter(prefix="/u/{cart_id}/item", tags=["User CartItem"])
+provider_router = APIRouter(prefix="/s/{shop_id}/item", tags=["Shop CartItem"])
+router = APIRouter()
 PatchCartItemResponse = service.PatchServiceById.model2schema(
     "PatchCartItemResponse",
     models.CartItem,
@@ -11,17 +14,25 @@ PatchCartItemResponse = service.PatchServiceById.model2schema(
 )
 
 
-@router.post("/{service_id}", response_model=service.create.CreateServiceResponse)
-class CreateCartItem(service.CreateService):
+@user_router.get("")
+class PaginateItem(service.PaginateService):
+    repo = models.CartItem
+    cart_id: int = Depends(middlewares.owner_access2cart)
+
+
+@user_router.post(
+    "/{service_id}",
+    response_model=service.create.CreateServiceResponse,
+)
+class create_cart_item(service.CreateService):
     repo = models.CartItem
     data: service.CreateService.model2schema("CreateCartItemSchema", models.CartItem)
     service_id: int = Path(...)  # TODO can buy now?!
-    cart_id: int = Depends(
-        middlewares.owner_access2cart
-    )  # this could be handle in data layer in create method too, but fail it as soon as possible
+    # this could be handle in data layer in create method too, but fail it as soon as possible
+    cart_id: int = Depends(middlewares.owner_access2cart)
 
 
-@router.patch("/{id}", response_model=PatchCartItemResponse)
+@user_router.patch("/{id}", response_model=PatchCartItemResponse)
 class PatchCartItem(service.PatchServiceById):
     repo = models.CartItem
     data: service.PatchServiceById.model2schema(
@@ -32,7 +43,24 @@ class PatchCartItem(service.PatchServiceById):
     cart_id: int = Depends(middlewares.owner_access2cart)
 
 
-@router.delete("/{id}", response_model=bool)
+@user_router.delete("/{id}", response_model=bool)
 class DeleteCartItem(service.DeleteServiceById):
     repo = models.CartItem
     cart_id: int = Depends(middlewares.owner_access2cart)
+
+
+@provider_router.get("")
+class list_item(service.PaginateService):
+    repo = models.CartItem
+    shop__user_id: int = Depends(middlewares.jwt2user_id)
+    shop_id: int
+
+    def _input_phase(self, **kw) -> dict:
+        exclude = set()
+        if self.shop_id == 0:
+            exclude.add("shop_id")
+        return super()._input_phase(**kw)
+
+
+router.include_router(user_router)
+router.include_router(provider_router)
