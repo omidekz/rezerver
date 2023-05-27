@@ -9,5 +9,7 @@ class Service(BaseModel):
     implement a class to use the pydantic full features
     """
 
+    NAME: ClassVar[str] = None
+
     def run(self):
         return self.dict()

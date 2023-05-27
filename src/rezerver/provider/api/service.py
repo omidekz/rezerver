@@ -9,7 +9,7 @@ from .middlewares import (
     provider_username2id_if_owner,
 )
 
-router = APIRouter(prefix="/{provider_id}/service", tags=["Service"])
+router = APIRouter(prefix="/{provider_id}/service")
 
 ListServiceResponse = service.BasePaginateResponse.from_model(
     models.Service,
@@ -26,39 +26,35 @@ ReadOneServiceResponse = service.ReadServiceById.model2schema(
 )
 
 
-@router.post("", response_model=service.create.CreateServiceResponse)
+@router.post(
+    "", response_model=service.create.CreateServiceResponse, tags=["Service Access"]
+)
 class CreateService(service.CreateService):
     repo = models.Service
     data: service.CreateService.model2schema("CreateServiceSchema", models.Service)
+    shop_id: int = Depends(provider_username2id_if_owner)
+
+
+@router.get("", response_model=ListServiceResponse, tags=["Service Public"])
+class ListService(service.PaginateService):
+    repo = models.Service
     shop_id: int = Depends(provider_username2id)
 
 
-@router.get("", response_model=ListServiceResponse)
-class ListService(service.PaginateService):
-    repo = models.Service
-    shop__id: int = Depends(provider_username2id)
-
-
-@router.get("")
-class PrivateListShop(service.PaginateService):
-    repo = models.Service
-    shop__id: int = Depends(provider_username2id_if_owner)
-
-
-@router.get("/{id}", response_model=ReadOneServiceResponse)
+@router.get("/{id}", response_model=ReadOneServiceResponse, tags=["Service Access"])
 class ReadServiceDetail(service.ReadServiceById):
     repo = models.Service
-    shop__user_id: int = Depends(jwt2user_id)
+    shop_id: int = Depends(provider_username2id_if_owner)
 
 
-@router.put("/{id}", response_model=PatchServiceSchema)
+@router.put("/{id}", response_model=PatchServiceSchema, tags=["Service Access"])
 class UpdateService(service.PatchServiceById):
     repo = models.Service
     data: PatchServiceSchema
-    shop__user_id: int = Depends(jwt2user_id)
+    shop_id: int = Depends(provider_username2id_if_owner)
 
 
-@router.delete("/{id}", response_model=bool)
+@router.delete("/{id}", response_model=bool, tags=["Service Access"])
 class DeleteService(ShopOwnerAccess, service.DeleteServiceById):
     repo = models.Service
-    shop__user_id: int = Depends(jwt2user_id)
+    shop_id: int = Depends(provider_username2id_if_owner)

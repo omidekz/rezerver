@@ -1,4 +1,4 @@
-from fastapi import Depends, Path, Query
+from fastapi import Depends, Path
 from pydantic import constr
 from tortoise.queryset import QuerySet
 from tortoise.functions import Count
@@ -6,9 +6,10 @@ from libs import APIRouter, service
 from rezerver.user.api.middlewares import jwt2user_id
 from .. import models
 from . import middlewares
+import typing as t
 
 
-router = APIRouter(prefix="/shop", tags=["Shop"])
+router = APIRouter(prefix="/shop")
 CreateShopSchema = service.CreateService.model2schema(
     "CreateShopSchema",
     models.Shop,
@@ -27,36 +28,35 @@ ShopListResponse = service.BasePaginateResponse.from_model(
 ReadOneShopResponse = service.ReadServiceById.model2schema(
     "ReadOneShopResponse", models.Shop
 )
+PublicReadOneShopResponse = dict(
+    response_model=ReadOneShopResponse,
+    response_model_exclude={"password"},
+)
 
 
-@router.post("", response_model=service.create.CreateServiceResponse)
-class CreateShop(service.CreateService):
+@router.post(
+    "",
+    response_model=service.create.CreateServiceResponse,
+    tags=["Shop Access"],
+)
+class create_shop(service.CreateService):
     repo = models.Shop
     data: CreateShopSchema
     user_id: int = Depends(jwt2user_id)
 
 
-@router.get("/{username}", response_model=ReadOneShopResponse)
+@router.get("/{username}", response_model=ReadOneShopResponse, tags=["Shop Public"])
 class PublicShopByUserName(service.ReadService):
     repo = models.Shop
     pk: int = Depends(
         middlewares.provider_username2id_base(
-            alias="username", iden_type=constr(min_length=3)
+            alias="username",
+            iden_type=t.Union[int, constr(min_length=3)],
         )
     )
 
 
-@router.get(
-    "/{sid}",
-    response_model=ReadOneShopResponse,
-    response_model_exclude={"password"},
-)
-class PublicShop(service.ReadServiceById):
-    repo = models.Shop
-    pk: int = Path(..., alias="sid")
-
-
-@router.get("/{id}", response_model=ReadOneShopResponse)
+@router.get("/{id}", response_model=ReadOneShopResponse, tags=["Shop Access"])
 class ShopOwnerView(service.ReadServiceById):
     repo = models.Shop
     user_id: int = Depends(jwt2user_id)
@@ -69,6 +69,7 @@ class ShopOwnerView(service.ReadServiceById):
         "ShopSearchResultResponse",
         _include_={"id", "username", "title", "created_at"},
     ),
+    tags=["Shop Public"],
 )
 class PublicSearchShop(service.PaginateService):
     repo = models.Shop
@@ -82,7 +83,7 @@ class PublicSearchShop(service.PaginateService):
         }
 
 
-@router.get("", response_model=ShopListResponse)
+@router.get("", response_model=ShopListResponse, tags=["Shop Access"])
 class ListShop(service.PaginateService):
     repo = models.Shop
     user_id: int = Depends(jwt2user_id)
@@ -94,14 +95,14 @@ class ListShop(service.PaginateService):
         return tuple(map(lambda i: {**dict(i), "orders": i.orders}, result))
 
 
-@router.put("/{id}", response_model=PatchShopSchema)
+@router.put("/{id}", response_model=PatchShopSchema, tags=["Shop Access"])
 class UpdateShop(service.PatchServiceById):
     repo = models.Shop
     user_id: int = Depends(jwt2user_id)
     data: PatchShopSchema
 
 
-@router.delete("/{id}", response_model=bool)
+@router.delete("/{id}", response_model=bool, tags=["Shop Access"])
 class DeleteShop(service.DeleteServiceById):
     repo = models.Shop
     user_id: int = Depends(jwt2user_id)

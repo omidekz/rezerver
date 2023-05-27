@@ -3,11 +3,11 @@ from tortoise import Tortoise
 
 
 class DB:
-    INSTALLED_APPS = ["rezerver.user", "rezerver.provider"]
+    INSTALLED_APPS = ["rezerver.user", "rezerver.provider", "rezerver.payment"]
 
     @classmethod
     async def db_init(cls):
-        app_ = lambda name_: {name_.split('.')[-1]: [f"{name_}.models"]}
+        app_ = lambda name_: {name_.split(".")[-1]: [f"{name_}.models"]}
         modules = dict()
         [modules.update(app_(installed_app)) for installed_app in cls.INSTALLED_APPS]
 

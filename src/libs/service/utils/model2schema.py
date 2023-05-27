@@ -36,11 +36,13 @@ def _model_fields2schema(model_class, _include_, _exclude_, _optionals_):
     )
     for k, v in model_class._meta.fields_map.items():
         is_excluded, isnot_included = k in exclude, k not in include and len(include)
-        if is_excluded or isnot_included or isinstance(v, ForeignKeyFieldInstance):
+        is_fk = isinstance(v, ForeignKeyFieldInstance)
+        if is_excluded or isnot_included:
             continue
-        fields_definitions[k] = (
-            v.field_type,
-            ... if k not in optionals else None,
+        key = (k + "_id") if is_fk else k
+        fields_definitions[key] = (
+            int if is_fk else v.field_type,
+            ... if k not in optionals and not is_fk else None,
         )
     return fields_definitions
 

@@ -23,7 +23,7 @@ class APIRouter(_APIRouter):
         return makefun.create_function(
             func_signature=cls.gen_sign(endpoint),
             func_impl=cls.make_callback(endpoint),
-            func_name=endpoint.__name__,
+            func_name=endpoint.NAME or endpoint.__name__,
         )
 
     def add_api_route(self, path: str, endpoint: Callable[..., Any], **kw):
