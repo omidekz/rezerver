@@ -1,0 +1,10 @@
+#!/bin/env bash
+
+mkdir -p rezerver/$1/api/middlewares
+mkdir -p rezerver/$1/models
+mkdir -p rezerver/$1/services
+touch rezerver/$1/__init__.py
+touch rezerver/$1/api/__init__.py
+touch rezerver/$1/api/middlewares/__init__.py
+touch rezerver/$1/models/__init__.py
+touch rezerver/$1/services/__init__.py
