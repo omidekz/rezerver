@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware import cors
-from rezerver.user.api import router as user_router
-from rezerver.provider.api import routes as provider_router
-from rezerver.payment.api import router as payment_router
+from user.api import router as user_router
+from provider.api import routes as provider_router
+from payment.api import router as payment_router
 from setting.db import DB
 
 app = FastAPI()

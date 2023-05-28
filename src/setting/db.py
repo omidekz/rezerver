@@ -3,7 +3,7 @@ from tortoise import Tortoise
 
 
 class DB:
-    INSTALLED_APPS = ["rezerver.user", "rezerver.provider", "rezerver.payment"]
+    INSTALLED_APPS = ["user", "provider", "payment"]
 
     @classmethod
     async def db_init(cls):
